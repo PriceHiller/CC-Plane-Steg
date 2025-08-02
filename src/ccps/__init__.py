@@ -76,7 +76,7 @@ def extract_bits_from_component_plane(
     return bits
 
 
-def convert_img_to_bw(img: Image.Image) -> Image.Image:
+def convert_img_to_bw(img: Image.Image, bw_threshold: int = 384) -> Image.Image:
     # Convert to RGB first to ensure we have a valid Red, Green, and Blue channel to evaluate
     img = img.convert("RGB")
 
@@ -88,7 +88,7 @@ def convert_img_to_bw(img: Image.Image) -> Image.Image:
     for y in range(img.height):
         for x in range(img.width):
             r, g, b = typing.cast(tuple[int, int, int], pixels[x, y])
-            bw_bits.append(int(r + g + b > 384))
+            bw_bits.append(int(r + g + b > bw_threshold))
 
     new_img = Image.new("1", img.size)
     new_img.putdata(bw_bits)  # pyright: ignore[reportUnknownMemberType]
