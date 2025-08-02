@@ -8,3 +8,9 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Misc
+*.ignored
+*.ignored/
+*.ignore
+*.ignore/
