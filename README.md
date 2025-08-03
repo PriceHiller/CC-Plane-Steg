@@ -10,6 +10,14 @@ Team Members:
 
 Requires `Python3.13` or higher. `Python3.13` can be downloaded [here](https://www.python.org/downloads/release/python-3135/).
 
+### On Windows 11 (YUCK 🤮💩🤮)
+
+- Head into the `src` directory
+- `py -3.13 -m venv .venv`
+- `Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force`
+- `.venv/Scripts/activate`
+- `pip install -r requirements.txt`
+
 ### Using [`pip`](https://pypi.org/project/pip/) (Note: `pip` comes with most Python installations)
 
 - Head into the `src` diretory
@@ -30,22 +38,7 @@ You should now have a working virtual environment
 ### Embedding
 Issued from within the `src` directory:
 ```bash
-python './main.py' \
-  -H ./assets/samples/anime.bmp \
-     ./assets/samples/bass.bmp \
-     ./assets/samples/bee-flower.bmp \
-     ./assets/samples/cartoon_pirate.bmp \
-     ./assets/samples/chameleon.bmp \
-     ./assets/samples/CoatCheck.jpg \
-     ./assets/samples/hist_Flowers_08g.bmp_@0x0_z_001.bmp \
-     ./assets/samples/mantis.bmp \
-     ./assets/samples/MantisC_24.bmp \
-     ./assets/samples/red-square.bmp \
-     ./assets/samples/Rhino_08gA.bmp \
-     ./assets/samples/Simpsons_24.bmp \
-     ./assets/samples/SunsetTree_08gA.bmp \
-  -c ./assets/samples/MantisC_24.bmp \
-  -o ./out.bmp
+python './main.py' -H ./assets/samples/anime.bmp ./assets/samples/bass.bmp ./assets/samples/bee-flower.bmp ./assets/samples/cartoon_pirate.bmp ./assets/samples/chameleon.bmp ./assets/samples/CoatCheck.jpg ./assets/samples/hist_Flowers_08g.bmp_@0x0_z_001.bmp ./assets/samples/mantis.bmp ./assets/samples/MantisC_24.bmp ./assets/samples/red-square.bmp ./assets/samples/Rhino_08gA.bmp ./assets/samples/Simpsons_24.bmp ./assets/samples/SunsetTree_08gA.bmp -c ./assets/samples/MantisC_24.bmp -o ./out.bmp
 ```
 
 `STDOUT` Output:
