@@ -1,4 +1,4 @@
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 from PIL import Image
 from dataclasses import dataclass, field
 from enum import Enum
@@ -26,6 +26,10 @@ class ColorComponent(Enum):
         else:
             raise ValueError(f"Component must be of R, G, or B, received: {component}")
 
+    @override
+    def __str__(self) -> str:
+        return self.value
+
 
 @dataclass()
 class CCPlane:
@@ -40,12 +44,36 @@ class CCPlane:
                 f"Plane must between 0 and 7 inclusive, received: '{self.plane}'"
             )
 
+    @classmethod
+    def from_str(cls, input: str) -> Self:
+        if len(input) != 2:
+            raise ValueError(
+                f"Invalid input string to convert into CCPlane, received: '{input}'"
+            )
+
+        letter = input[0]
+        try:
+            color_component = ColorComponent.from_str(letter)
+        except ValueError as e:
+            raise ValueError(
+                f"Invalid first letter for plane color component, err: {e}"
+            )
+
+        plane = input[1]
+        if not plane.isdecimal() or int(plane) < 0 or int(plane) > 7:
+            raise ValueError(
+                f"Invalid second letter for plane number, expected a number from 0-7 inclusive, received: '{plane}'"
+            )
+        plane = int(plane)
+
+        return cls(color_component, plane)
+
     def __post_init__(self):
         self.validate()
 
     @override
     def __str__(self) -> str:
-        return f"{self.color}-{self.plane}"
+        return f"{self.color}{self.plane}"
 
 
 def extract_bits_from_component_plane(
@@ -144,15 +172,13 @@ def extract_from_cover_image(cover_img: Image.Image, ccplane: CCPlane) -> Image.
     return ext_img
 
 
-
-
 class HiddenImage(NamedTuple):
     ccplane: CCPlane
     img: Image.Image
 
 
 @dataclass()
-class CoverImage():
+class CoverImage:
     """A Cover image class to help with embedding and extracting images
 
     Attributes:
@@ -166,6 +192,10 @@ class CoverImage():
     def __post_init__(self):
         if len(self.ccplanes) == 0:
             self.ccplanes = self.get_embeddable_ccplanes()
+
+        dups = [dup for dup in self.ccplanes if self.ccplanes.count(dup) >= 2]
+        if len(dups) != 0:
+            raise ValueError("Provided ccplanes had duplicate entries!")
 
     @classmethod
     def get_embeddable_ccplanes(cls) -> list[CCPlane]:
@@ -185,7 +215,6 @@ class CoverImage():
             CCPlane(ccp[1], ccp[0]) for ccp in embeddable_component_planes
         ]
         return embeddable_component_planes
-
 
     @classmethod
     def get_all_ccplanes(cls) -> list[CCPlane]:
@@ -210,9 +239,27 @@ class CoverImage():
         embed_bw_in_cover(self.img, bw_img, ccplane)
         return HiddenImage(ccplane, bw_img)
 
-    def extract_all_planes(
-        self
-    ) -> Generator[HiddenImage, None, None]:
+    def extract_all_planes(self) -> Generator[HiddenImage, None, None]:
         for ccplane in self.get_all_ccplanes():
             extracted_img = extract_from_cover_image(self.img, ccplane)
             yield HiddenImage(ccplane, extracted_img)
+
+    def extract_planes(
+        self, ccplanes: Iterable[CCPlane]
+    ) -> Generator[HiddenImage, None, None]:
+        for ccplane in ccplanes:
+            extracted_img = extract_from_cover_image(self.img, ccplane)
+            yield HiddenImage(ccplane, extracted_img)
+
+    def extract_plane(self, ccplane: CCPlane) -> Image.Image:
+        return extract_from_cover_image(self.img, ccplane)
+
+    def embed_img_in_ccplane(self, img: Image.Image, ccplane: CCPlane) -> HiddenImage:
+        bw_img = convert_img_to_bw(img)
+        embed_bw_in_cover(self.img, bw_img, ccplane)
+        return HiddenImage(ccplane, bw_img)
+
+    def can_fit(self, img: Image.Image | HiddenImage) -> bool:
+        if isinstance(img, HiddenImage):
+            img = img.img
+        return img.size[0] <= self.img.size[0] and img.size[1] <= self.img.size[1]
