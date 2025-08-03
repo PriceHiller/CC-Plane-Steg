@@ -15,7 +15,7 @@ Requires `Python3.13` or higher. `Python3.13` can be downloaded [here](https://w
 - Head into the `src` diretory
 - `python3 -m venv .venv`
 - `source .venv/bin/activate`
-- `python3 -m pip install -r requirements.txt`
+- `pip install -r requirements.txt`
 
 ### Using [`uv`](https://docs.astral.sh/uv/)
 - Head into the `src` directory
