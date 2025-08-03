@@ -1,6 +1,7 @@
 import argparse
 from collections.abc import Sequence
 from pathlib import Path
+import sys
 
 from PIL import Image
 
@@ -63,20 +64,23 @@ def hide(
 
 
 def extract(cover_img: CoverImage, ccplane: CCPlane | bool, output_path: Path):
+    """Handle extraction out of the image"""
     output_path.mkdir(parents=True, exist_ok=True)
     ccplanes: list[CCPlane] = []
+
+    # If they specify a specific plane to extract from, we only want to use that one; otherwise, we
+    # want to extract out of all the valid planes to extract from.
     if isinstance(ccplane, CCPlane):
         ccplanes.append(ccplane)
     else:
-        ccplanes = CoverImage.get_embeddable_ccplanes()
+        ccplanes = CoverImage.get_all_ccplanes()
 
     for ccplane, img in cover_img.extract_planes(ccplanes):
         save_path = output_path / f"{ccplane}.extracted.bmp"
         img.save(save_path)
         print(f"Extracted image from plane '{ccplane}' to '{save_path}'")
 
-
-def run(argv: Sequence[str] | None = None):
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="ccps", description="Color Component Steganography Tool"
     )
@@ -104,19 +108,22 @@ def run(argv: Sequence[str] | None = None):
     )
     exc_grp = parser.add_mutually_exclusive_group(required=True)
 
-    # extract_exc_grp = exc_grp.add_mutually_exclusive_group()
-
     _ = exc_grp.add_argument(
         "-e",
         "--extract",
         type=get_extract_ccplane,
         const=True,
         nargs="?",
-        metavar="[R|G|B][0-7]",
+        metavar="[R|G|B][0-7] or None",
         help="""
         Whether to extract the black & white image color component planes from the provided cover image.
 
+        If you wish to extract only a specific component plane, it can be chosen with the format <COLOR-LETTER><0-7>.
+        For example, to extract from the 0th RED color component, you would provide R0. Valid letters are R, G, B and numbers 0-7.
+
         If there isn't an argument specified then it will extract all of the color component planes of the cover image.
+
+
         """.strip(),
     )
 
@@ -127,7 +134,9 @@ def run(argv: Sequence[str] | None = None):
         type=get_img_to_hide,
         help="""Hide mode with paths (max 23).
 
-            If you want to embed in a specific component plane you can suffix the given path with :<COLOR-LETTER><0-7>. For example, a path like ./my-img.bmp:R0 would embed `my-img.bmp` in the red channel at plane 0. R = RED, G = GREEN, B = BLUE.
+            If you want to embed in a specific component plane you can suffix the given path with :<COLOR-LETTER><0-7>. For example, a path like ./my-img.bmp:R0 would embed `my-img.bmp` in the red channel at plane 0. Valid color letters are R, G, B and the number may be 0-7 inclusive.
+
+            If you decide to embed in a specific component plane, then all the images to hide must have a component plane specified as well.
             """.strip(),
         metavar="PATH or PATH:<COLOR-LETTER><0-7>",
     )
@@ -147,14 +156,30 @@ def run(argv: Sequence[str] | None = None):
                     f"Cannot hide '{img_to_hide_path}' in cover image, dimensions are too large!"
                 )
 
+        # We want to ensure that if we are passed images to hide with specific color component
+        # planes to embed into, that we ensure ALL of the images to hide specify a color component
+        # plane. This avoids an icky situation where the user specifies a color component plane, but
+        # then has their image to hide overriden during iteration later on and seemingly their image
+        # to hide in that specific plane was never hidden.
         himgs = [img for img in imgs_to_hide if isinstance(img, HiddenImage)]
         if len(himgs) > 0 and len(himgs) != len(imgs_to_hide):
             parser.error(
                 "It appears you're trying to hide images in specific component planes and unspecified bit planes. If you specify a component plane for a single image to hide, you must specify the component plane to hide in for all other images to hide!"
             )
+    return args
 
+def _run(args: argparse.Namespace):
     if args.hide:
         hide(args.cover, args.hide, args.output)
 
     if args.extract:
         extract(args.cover, args.extract, args.output)
+
+
+def run():
+    argv = sys.argv[1:]
+    # By default, if we don't have any arguments we want to show the full help
+    if len(argv) > 1:
+        _run(parse_args(argv))
+    else:
+        _ = parse_args(['--help'])

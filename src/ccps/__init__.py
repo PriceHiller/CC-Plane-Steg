@@ -20,6 +20,7 @@ def extract_bit(byte: int, position: int) -> int:
 
 
 class ColorComponent(Enum):
+    """A enum helper to access a Red, Green, or Blue channel in an RGB image."""
     RED = "R"
     GREEN = "G"
     BLUE = "B"
@@ -43,7 +44,12 @@ class ColorComponent(Enum):
 
 @dataclass()
 class CCPlane:
-    """A Color Component Plane"""
+    """A Color Component Plane
+
+    A color component plane is just a bit plane, but ONLY the bits from a color channel within that bit plane. So instead of bit plane 0, we'd say we have color component plane Red 0 which corresponds to only the bits belonging to the red channel at the 0th bit plane in an RGB image.
+
+    We have 24 total color component planes in a given RGB image, since we have 3 components per bit plane, and 8 bit planes total. 3 * 8 = 24.
+    """
 
     color: ColorComponent
     plane: int
@@ -89,6 +95,15 @@ class CCPlane:
 def extract_bits_from_component_plane(
     img: Image.Image, component: ColorComponent | str, plane: int
 ) -> list[int]:
+    """Does what it says on the tin: extract bits from a component plane.
+
+    A component plane is a COLOR component plane.
+
+    Raises:
+        ValueError: When the provided image isn't in RGB format
+        RuntimeError: When the pixels couldn't be loaded/read from the image
+    """
+    # If we're given a string, we'll do the courtesy of getting the component that corresponds to it
     if isinstance(component, str):
         component = ColorComponent.from_str(component)
 
@@ -102,6 +117,7 @@ def extract_bits_from_component_plane(
     bits: list[int] = []
     for y in range(img.height):
         for x in range(img.width):
+            # Casting is done here to make type checkers happy
             r, g, b = typing.cast(tuple[int, int, int], pixels[x, y])
             if component == ColorComponent.RED:
                 extracted_bit = extract_bit(r, plane)
@@ -115,6 +131,10 @@ def extract_bits_from_component_plane(
 
 
 def convert_img_to_bw(img: Image.Image, bw_threshold: int = 384) -> Image.Image:
+    """Coverts the given input image to black and white.
+
+    You'll notice that by default the threshold is set to 384. 384 came from 128 * 3, where 128 is half the possible value of an 8-bit color channel + 1.
+    This ensures perfectly gray pixels at 50% luminosity are processed as black."""
     # Convert to RGB first to ensure we have a valid Red, Green, and Blue channel to evaluate
     img = img.convert("RGB")
 
@@ -125,9 +145,13 @@ def convert_img_to_bw(img: Image.Image, bw_threshold: int = 384) -> Image.Image:
     bw_bits: list[int] = []
     for y in range(img.height):
         for x in range(img.width):
+            # Casting is done here to make type checkers happy
             r, g, b = typing.cast(tuple[int, int, int], pixels[x, y])
+            # Actually do the conversion here. Converting a boolean to an integer yields 0 or 1
+            # where 0 is black and 1 is white.
             bw_bits.append(int(r + g + b > bw_threshold))
 
+    # Note that "1" means black and white for the Pillow library.
     new_img = Image.new("1", img.size)
     new_img.putdata(bw_bits)  # pyright: ignore[reportUnknownMemberType]
     return new_img
@@ -160,9 +184,11 @@ def embed_bw_in_cover(
 
     for y in range(img_to_embed.height):
         for x in range(img_to_embed.width):
+            # Casting is done here to make type checkers happy
             cover_R, cover_G, cover_B = typing.cast(
                 tuple[int, int, int], cover_img_pixels[x, y]
             )
+            # Casting is done here to make type checkers happy
             bw_pixel: int = typing.cast(int, img_to_embed_pixels[x, y])
             if ccplane.color == ColorComponent.RED:
                 cover_R = embed_bit(cover_R, ccplane.plane, bw_pixel)
@@ -174,6 +200,7 @@ def embed_bw_in_cover(
 
 
 def extract_from_cover_image(cover_img: Image.Image, ccplane: CCPlane) -> Image.Image:
+    """Simple helper to more easily extract an image directly without needing to fiddle with the bits"""
     ext_data = extract_bits_from_component_plane(
         cover_img, ccplane.color, ccplane.plane
     )
@@ -244,12 +271,15 @@ class CoverImage:
         if len(self.ccplanes) == 0:
             raise RuntimeError("No remaining embeddable ccplanes to embed into!")
 
+        # We pop from the 0th index because we want to grab the first element in the list
+        # This makes it easier to pass in custom ccplanes without all the headache to embed
         ccplane = self.ccplanes.pop(0)
         bw_img = convert_img_to_bw(img)
         embed_bw_in_cover(self.img, bw_img, ccplane)
         return HiddenImage(ccplane, bw_img)
 
     def extract_all_planes(self) -> Generator[HiddenImage, None, None]:
+        # This function is primarily used for testing and ease of API integration
         for ccplane in self.get_all_ccplanes():
             extracted_img = extract_from_cover_image(self.img, ccplane)
             yield HiddenImage(ccplane, extracted_img)
