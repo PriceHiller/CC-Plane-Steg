@@ -8,7 +8,7 @@ Team Members:
 
 ## Environment Configuration
 
-Requires `Python3.13` or higher
+Requires `Python3.13` or higher. `Python3.13` can be downloaded [here](https://www.python.org/downloads/release/python-3135/).
 
 ### Using [`pip`](https://pypi.org/project/pip/) (Note: `pip` comes with most Python installations)
 
