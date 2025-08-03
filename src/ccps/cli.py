@@ -13,7 +13,6 @@ def get_extract_ccplane(arg: str | None) -> CCPlane | bool:
         return True
 
     try:
-        print("HERE!")
         ccplane = CCPlane.from_str(arg)
     except ValueError as e:
         raise argparse.ArgumentTypeError(f"Invalid extract argument received, err: {e}")
@@ -146,14 +145,14 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
     # Additional hidden image to hide validation
     if args.hide:
-        imgs_to_hide: list[tuple[Path, Image.Image]] = args.hide
+        imgs_to_hide: list[tuple[Path, Image.Image | HiddenImage]] = args.hide
         if len(imgs_to_hide) > 23:
             parser.error("--hide accepts a maximum of 23 paths")
 
         for img_to_hide_path, img_to_hide in imgs_to_hide:
             if not cover_img.can_fit(img_to_hide):
                 parser.error(
-                    f"Cannot hide '{img_to_hide_path}' in cover image, dimensions are too large!"
+                    f"Cannot hide '{img_to_hide_path}' in cover image, dimensions are too large. \nCover image dimensions: {cover_img.img.size}\n{img_to_hide_path} dimensions: {img_to_hide.img.size if isinstance(img_to_hide, HiddenImage) else img_to_hide.size}"
                 )
 
         # We want to ensure that if we are passed images to hide with specific color component
