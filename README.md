@@ -8,8 +8,7 @@ Team Members:
 
 ## Environment Configuration
 
-- [Python Pillow >= 11.3.0](https://pypi.org/project/pillow/)
-
+Requires `Python3.13` or higher
 
 ### Using [`pip`](https://pypi.org/project/pip/) (Note: `pip` comes with most Python installations)
 
