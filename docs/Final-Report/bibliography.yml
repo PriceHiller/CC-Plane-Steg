@@ -1,0 +1,56 @@
+improved-lsb-rgb:
+  title: An improved LSB based image steganography technique for RGB images
+  type: Article
+  date: 2015-05-07
+  publisher: IEEE
+  author:
+    - Singh, Amritpal
+    - Singh, Harpal
+  serial-number:
+    doi: "10.1109/ICECCT.2015.7226122"
+  page-range: 1-4
+  url:
+    value: https://ieeexplore.ieee.org/document/7226122
+  parent:
+    - type: periodical
+      title: 2015 IEEE International Conference on Electrical, Computer and Communication Technologies (ICECCT), Coimbatore, India
+      organization: The Institute of Electrical and Electronics Engineers
+      location: Coimbatore, India
+
+lsb-steg-explore:
+  title: Exploring LSB Steganography Possibilities in RGB Images
+  type: Article
+  date: 2021-07-06
+  publisher: IEEE
+  author:
+    - Dumre, Rutvik
+    - Dave, Aashka
+  serial-number:
+    doi: "10.1109/ICCCNT51525.2021.9579588"
+  page-range: 1-7
+  url:
+    value: https://ieeexplore.ieee.org/document/9579588
+  parent:
+    - type: periodical
+      title: 2021 12th International Conference on Computing Communication and Networking Technologies (ICCCNT), Kharagpur, India
+      organization: The Institute of Electrical and Electronics Engineers
+      location: Kharagpur, India
+
+visual-sensitivty:
+  title: A new data hiding approach for image steganography based on visual color sensitivity
+  type: Article
+  publisher: Springer Nature
+  serial-number:
+    doi: "10.1007/s11042-020-10224-w"
+  url:
+    value: https://link.springer.com/article/10.1007/s11042-020-10224-w#citeas
+  date: 2021-01-06
+  author:
+    - AbdelRaouf, Ashraf
+  page-range: 23393-23417
+  parent:
+    type: Periodical
+    title: Multimedia Tools and Applications
+    volume: 80
+    publisher: Springer Nature
+
